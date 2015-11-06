@@ -8,7 +8,6 @@ module Constants
     :search_dir => :backward,
     :next_health => HEALTH[:initial]
   }
-  LEVEL_MAX = Float::MAX
 end
 module Details
   def tile(dir)
@@ -44,18 +43,6 @@ module Details
       :backward
     else
       nil
-    end
-  end
-  def level
-    # Figure out what level we're on
-    if !character.respond_to?(:feel)
-      return 1
-    elsif !character.respond_to?(:health)
-      return 2
-    elsif !character.respond_to?(:rescue!)
-      return 4
-    else
-      return Constants::LEVEL_MAX
     end
   end
 end
