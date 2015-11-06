@@ -133,7 +133,7 @@ module Character
       !can_attack?
     end
     def should_retreat?
-      return must_rest?
+      must_rest?
     end
     def should_rest?
       health < Constants::HEALTH[:safe]
