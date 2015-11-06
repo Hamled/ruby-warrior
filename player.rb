@@ -12,7 +12,7 @@ module Constants
 end
 module Details
   def tile(dir)
-    return :empty unless level > 1
+    return :empty if insensate?
 
     tile = (dir == :forward) ? character.feel : character.feel(dir)
     case true
@@ -72,6 +72,9 @@ module Character
     def search_dir
       state[:search_dir]
     end
+    def insensate?
+      !character.respond_to?(:feel)
+    end
     def update_state(character)
         @character = character
         @turn ||= 0
@@ -81,7 +84,7 @@ module Character
         state.merge!({
           :last_health => state[:next_health],
           :next_health => health,
-          :search_dir => (level < 6 || find(:wall) == :backward) ? :forward : state[:search_dir]
+          :search_dir => (insensate? || find(:wall) == :backward) ? :forward : state[:search_dir]
         })
     end
     def state
