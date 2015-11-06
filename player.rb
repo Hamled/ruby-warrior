@@ -8,7 +8,7 @@ module Constants
     :search_dir => :backward,
     :next_health => HEALTH[:initial]
   }
-  LEVEL_MAX = Integer::MAX
+  LEVEL_MAX = Float::MAX
 end
 module Details
   def tile(dir)
@@ -60,100 +60,102 @@ module Details
   end
 end
 module Character
-  attr_reader :character
+  module Attributes
+    attr_reader :character
 
-  def health
-    character.respond_to?(:health) ? character.health : Constants::HEALTH[:initial]
-  end
-  def last_health
-    state[:last_health]
-  end
-  def search_dir
-    state[:search_dir]
-  end
-  def update_state(character)
-      @character = character
-      @turn ||= 0
-      @turn += 1
+    def health
+      character.respond_to?(:health) ? character.health : Constants::HEALTH[:initial]
+    end
+    def last_health
+      state[:last_health]
+    end
+    def search_dir
+      state[:search_dir]
+    end
+    def update_state(character)
+        @character = character
+        @turn ||= 0
+        @turn += 1
 
-      # Update our state based on the new character info
-      state.merge!({
-        :last_health => state[:next_health],
-        :next_health => health,
-        :search_dir => (level < 6 || find(:wall) == :backward) ? :forward : state[:search_dir]
-      })
-  end
+        # Update our state based on the new character info
+        state.merge!({
+          :last_health => state[:next_health],
+          :next_health => health,
+          :search_dir => (level < 6 || find(:wall) == :backward) ? :forward : state[:search_dir]
+        })
+    end
     def state
       @state ||= Constants::STATE_INITIAL
     end
-end
-module Actions
-  def action!(action, dir = nil)
-    action = (action.to_s + "!").to_sym
-    if dir == :forward || dir.nil?
-      character.send(action)
-    else
-      character.send(action, dir)
+  end
+  module Actions
+    def action!(action, dir = nil)
+      action = (action.to_s + "!").to_sym
+      if dir == :forward || dir.nil?
+        character.send(action)
+      else
+        character.send(action, dir)
+      end
+    end
+    def rest!
+      action!(:rest)
+    end
+    def walk!(dir = :forward)
+      action!(:walk, dir)
+    end
+    def search!
+      if dir = can_attack?
+        attack!(dir) # Give 'em what for
+      elsif dir = can_rescue?
+        rescue!(dir) # No case too big, no case too small
+      else
+        walk!(search_dir)
+      end
+    end
+    def retreat!
+      walk!(:backward)
+    end
+    def attack!(dir)
+      action!(:attack, dir)
+    end
+    def rescue!(dir)
+      action!(:rescue, dir)
+    end
+    def charge!
+      walk!
     end
   end
-  def rest!
-    action!(:rest)
-  end
-  def walk!(dir = :forward)
-    action!(:walk, dir)
-  end
-  def search!
-    if dir = can_attack?
-      attack!(dir) # Give 'em what for
-    elsif dir = can_rescue?
-      rescue!(dir) # No case too big, no case too small
-    else
-      walk!(search_dir)
+  module Status
+    def can_attack?
+      find(:enemy)
     end
-  end
-  def retreat!
-    walk!(:backward)
-  end
-  def attack!(dir)
-    action!(:attack, dir)
-  end
-  def rescue!(dir)
-    action!(:rescue, dir)
-  end
-  def charge!
-    walk!
-  end
-end
-module Status
-  def can_attack?
-    find(:enemy)
-  end
-  def can_rescue?
-    find(:captive)
-  end
-  def should_charge?
-    !can_attack?
-  end
-  def should_retreat?
-    return must_rest?
-  end
-  def should_rest?
-    health < Constants::HEALTH[:safe]
-  end
-  def must_rest?
-    health < Constants::HEALTH[:danger]
-  end
-  def under_attack?
-    health < last_health
+    def can_rescue?
+      find(:captive)
+    end
+    def should_charge?
+      !can_attack?
+    end
+    def should_retreat?
+      return must_rest?
+    end
+    def should_rest?
+      health < Constants::HEALTH[:safe]
+    end
+    def must_rest?
+      health < Constants::HEALTH[:danger]
+    end
+    def under_attack?
+      health < last_health
+    end
   end
 end
 
 class Player
   include Constants
   include Details
-  include Character
-  include Actions
-  include Status
+  include Character::Attributes
+  include Character::Actions
+  include Character::Status
 
   def play_turn(warrior)
     update_state(warrior)
