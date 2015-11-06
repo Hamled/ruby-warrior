@@ -75,7 +75,7 @@ module Character
       state.merge!({
         :last_health => state[:next_health],
         :next_health => health,
-        :search_dir => (find(:wall) == :backward) ? :forward : state[:search_dir]
+        :search_dir => (level < 6 || find(:wall) == :backward) ? :forward : state[:search_dir]
       })
   end
     def state
