@@ -51,7 +51,11 @@ module Character
     attr_reader :character
 
     def health
-      character.respond_to?(:health) ? character.health : Constants::HEALTH[:initial]
+      if immortal?
+        Constants::HEALTH[:initial]
+      else
+        character.health
+      end
     end
     def last_health
       state[:last_health]
@@ -61,6 +65,9 @@ module Character
     end
     def insensate?
       !character.respond_to?(:feel)
+    end
+    def immortal?
+      !character.respond_to?(:health)
     end
     def update_state(character)
         @character = character
