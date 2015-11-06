@@ -11,7 +11,7 @@ module Constants
 end
 module Details
   def tile(dir)
-    return :empty unless character.respond_to?(:feel)
+    return :empty unless level > 1
 
     tile = (dir == :forward) ? character.feel : character.feel(dir)
     case true
