@@ -45,6 +45,14 @@ module Details
       nil
     end
   end
+  def level
+    # Figure out what level we're on
+    if !character.respond_to?(:feel)
+      return 1
+    else
+      return 2
+    end
+  end
 end
 module Character
   attr_reader :character
